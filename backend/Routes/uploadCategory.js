@@ -148,8 +148,18 @@ categoryRouter.post('/category/:id', async (req, res) => {
     const database = await db.getDatabase();
     const categoriesCollection = database.collection('categories');
     
+    const category = await categoriesCollection.findOne({ _id: new mongodb.ObjectId(id) });
+    if (category && category.fileId) {
+      const fileId = category.fileId;
+      const bucket = new mongodb.GridFSBucket(await db.getDatabase());
+      bucket.delete(new mongodb.ObjectId(fileId), (err) => {
+        if (err) {
+          console.error('Error deleting image:', err);
+        }
+      });
+    }
+
     const result = await categoriesCollection.deleteOne({ _id: new mongodb.ObjectId(id) });
-    
     if (result.deletedCount === 1) {
       res.status(200).json({ message: 'Category deleted successfully' });
     } else {

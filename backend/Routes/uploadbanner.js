@@ -84,35 +84,63 @@ bannerRouter.post("/add", upload.single("bannerImage"), async (req, res) => {
 }); 
  
 bannerRouter.get("/image/:fileId", async (req, res) => { 
-  const { fileId } = req.params; 
-  try { 
-    const objectId = new mongodb.ObjectId(fileId); 
-    const downloadStream = bucket.openDownloadStream(objectId); 
- 
-    downloadStream.on("error", (error) => { 
-      console.error("Error in Retrieving file", error); 
-      res.status(500).json({ message: "Error in Retrieving file ", error: error.message }); 
-    }); 
- 
-    res.setHeader("Content-Type", "image/jpeg"); 
-    downloadStream.pipe(res); 
-  } catch (error) { 
-    console.error("Error processing request:", error); 
-    res.status(500).json({ message: "Internal server error", error: error.message }); 
-  } 
+  const { fileId } = req.params;
+
+  if (!mongodb.ObjectId.isValid(fileId)) {
+    return res.status(400).json({ message: "Invalid file ID format" });
+  }
+
+  try {
+    const objectId = new mongodb.ObjectId(fileId);
+    const downloadStream = bucket.openDownloadStream(objectId);
+
+    downloadStream.on("error", (error) => {
+      console.error("Error retrieving file:", error);
+      res.status(500).json({ message: "Error retrieving file", error: error.message });
+    });
+
+    const database = await db.getDatabase();
+    const metadataCollection = database.collection("banners");
+    const fileMetadata = await metadataCollection.findOne({ fileId: fileId });
+
+    if (!fileMetadata) {
+      return res.status(404).json({ message: "File metadata not found" });
+    }
+
+    res.setHeader("Content-Type", fileMetadata.contentType || "image/jpeg");
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.error("Error processing request:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
 }); 
 
 bannerRouter.delete("/banners/:fileId", async (req, res) => {
   const { fileId } = req.params;
+
+  if (!mongodb.ObjectId.isValid(fileId)) {
+    return res.status(400).json({ message: "Invalid file ID format" });
+  }
+
   try {
     const objectId = new mongodb.ObjectId(fileId);
-    await bucket.delete(objectId);
+
+    try {
+      await bucket.delete(objectId);
+    } catch (error) {
+      console.error("Error deleting file from GridFS:", error);
+      return res.status(500).json({ message: "Error deleting file from GridFS.", error: error.message });
+    }
 
     const database = await db.getDatabase();
     const metadataCollection = database.collection("banners");
-    await metadataCollection.deleteOne({ fileId });
+    const result = await metadataCollection.deleteOne({ fileId });
 
-    res.status(200).json({ message: "Banner deleted successfully." });
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: "Banner deleted successfully." });
+    } else {
+      res.status(404).json({ message: "Banner metadata not found" });
+    }
   } catch (error) {
     console.error("Error deleting banner:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
