@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
 const corsOptions = {
-  origin: "*",
+  origin: "https://66d6dd608e2116fd30d4310c--qr-scanning-app.netlify.app/",
   method: "GET,POST,PUT,PATCH,DELETE",
   preFlightContinue: false,
   OptionSucessStatus: 204,
