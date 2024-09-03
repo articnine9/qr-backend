@@ -1,8 +1,8 @@
 const mongodb = require("mongodb");
 const { MongoClient, GridFSBucket } = mongodb;
 
-const password= encodeURIComponent(process.env.MONGO_PASSWORD)
-const url = `mongodb+srv://Articnine:${password}@test-cluster.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=test-cluster`;
+// const password= encodeURIComponent(process.env.MONGO_PASSWORD)
+const url = "mongodb+srv://Articnine:artic9@123@test-cluster.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=test-cluster";
 const dbName = "test";
 
 let client;
