@@ -1,7 +1,7 @@
 const mongodb = require("mongodb");
 const { MongoClient, GridFSBucket } = mongodb;
 
-const url = "mongodb+srv://Articnine:vDxilBEw2KWCIWIA@test-cluster.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=test-cluster";
+const url = "mongodb+srv://Articnine:u4DhYKcw8qhHK4cG@cluster0.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const dbName = "test";
 
 let client;
