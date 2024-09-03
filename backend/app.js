@@ -16,20 +16,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
 const corsOptions = {
-  origin: "https://66d6dd608e2116fd30d4310c--qr-scanning-app.netlify.app/",
+  origin: "https://66d6dd608e2116fd30d4310c--qr-scanning-app.netlify.app",
   method: "GET,POST,PUT,PATCH,DELETE",
   preFlightContinue: false,
   OptionSucessStatus: 204,
 };
 app.use(cors(corsOptions));
-
-app.use("/user", userRouter);
-app.use("/menu", MenuSec);
-app.use("/files", fileRouter);
-app.use('/banner',bannerRouter)
-app.use('/categories',categoryRouter)
-app.use('/cart',cartRouter)
-app.use('/bills',billsRouter)
+const apiUrl = process.env.REACT_APP_API_URL;
+app.use(`${apiUrl}/user`, userRouter);
+app.use(`${apiUrl}/menu`, MenuSec);
+app.use(`${apiUrl}/files`, fileRouter);
+app.use(`${apiUrl}/banner`,bannerRouter)
+app.use(`${apiUrl}/categories`,categoryRouter)
+app.use(`${apiUrl}/cart`,cartRouter)
+app.use(`${apiUrl}/bills`,billsRouter)
 
 app.use((req, res) => {
   res.status(400).send("<h1>Error found</h1>");
