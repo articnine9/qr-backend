@@ -1,7 +1,6 @@
 const mongodb = require("mongodb");
 const { MongoClient, GridFSBucket } = mongodb;
 
-// const password= encodeURIComponent(process.env.MONGO_PASSWORD)
 const url = "mongodb+srv://Articnine:vDxilBEw2KWCIWIA@test-cluster.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=test-cluster";
 const dbName = "test";
 
