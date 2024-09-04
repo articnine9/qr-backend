@@ -41,7 +41,6 @@ cartRouter.post("/cartitems", async (req, res) => {
 }); 
  
 cartRouter.put("/cartitems/:id", async (req, res) => { 
-  console.log("Received payload:", req.body); 
  
   const { id } = req.params; 
   const { updatedItems } = req.body; 
