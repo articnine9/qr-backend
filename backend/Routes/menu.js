@@ -16,6 +16,7 @@ menu.get("/stocks", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 menu.post("/edit", async (req, res) => {
   const { _id, name, stock, price, type, categoryName } = req.body;
 
