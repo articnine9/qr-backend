@@ -136,7 +136,8 @@ categoryRouter.get("/image/:fileId", async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 });
-categoryRouter.delete('/category/:id', async (req, res) => {
+
+categoryRouter.post('/category/:id', async (req, res) => {
   const { id } = req.params;
 
   if (!mongodb.ObjectId.isValid(id)) {
@@ -169,5 +170,4 @@ categoryRouter.delete('/category/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
 module.exports = categoryRouter;
