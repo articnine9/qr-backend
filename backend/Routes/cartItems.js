@@ -24,10 +24,10 @@ cartRouter.post("/cartitems", async (req, res) => {
     return res.status(400).json({ error: "Invalid input data" });
   }
 
-  // Ensure that each item has a status
+  
   const itemsWithStatus = items.map(item => ({
     ...item,
-    status: item.status || "Not Served" // Default to "not served" if status is missing
+    status: item.status || "Not Served" 
   }));
 
   try {
@@ -61,7 +61,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !item.price ||
         !item.categoryName ||
         !item.count ||
-        !item.status // Ensure status is included
+        !item.status 
     )
   ) {
     console.error("Invalid input data:", req.body);
