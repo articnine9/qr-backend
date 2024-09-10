@@ -137,7 +137,7 @@ categoryRouter.get("/image/:fileId", async (req, res) => {
   }
 });
 
-categoryRouter.post('/category/:id', async (req, res) => {
+categoryRouter.delete('/category/:id', async (req, res) => {
   const { id } = req.params;
 
   if (!mongodb.ObjectId.isValid(id)) {
