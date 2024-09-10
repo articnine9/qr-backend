@@ -13,7 +13,7 @@ const initBucket = async () => {
   if (!bucket) {
     try {
       const database = await db.getDatabase();
-      bucket = new mongodb.GridFSBucket(database, { bucketName: 'combos' });
+      bucket = new mongodb.GridFSBucket(database);
     } catch (error) {
       throw new Error("Failed to connect to GridFS");
     }
@@ -109,6 +109,8 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
       console.error("Error processing request:", error);
       res.status(500).json({ message: "Internal server error", error: error.message });
     }});
+
+
 comboRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
