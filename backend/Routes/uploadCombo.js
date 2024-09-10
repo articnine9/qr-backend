@@ -8,7 +8,6 @@ const upload = multer({ storage });
 const comboRouter = express.Router();
 let bucket;
 
-// Initialize GridFS Bucket
 const initBucket = async () => {
   if (!bucket) {
     try {
@@ -20,7 +19,6 @@ const initBucket = async () => {
   }
 };
 
-// Middleware to initialize GridFS bucket
 comboRouter.use(async (req, res, next) => {
   try {
     await initBucket();
@@ -31,7 +29,6 @@ comboRouter.use(async (req, res, next) => {
   }
 });
 
-// Route to get all combos
 comboRouter.get("/combos", async (req, res) => {
   try {
     const database = await db.getDatabase();
@@ -44,12 +41,14 @@ comboRouter.get("/combos", async (req, res) => {
   }
 });
 
-// Route to add a new combo
 comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
   try {
-    const { name, items } = req.body;
+    const { comboName } = req.body;
+  const comboItems = req.body.comboItems;
+  const comboImage = req.file; // For single file upload
 
-    if (!name || !items || !req.file) {
+
+  if (!comboName || !comboItems || !comboImage) {
       return res.status(400).json({ message: "Name, items, and image are required" });
     }
 
@@ -65,8 +64,8 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         const database = await db.getDatabase();
         const metadataCollection = database.collection("combos");
         await metadataCollection.insertOne({
-          name,
-          items: JSON.parse(items), 
+          comboName,
+          comboItems: JSON.parse(items), 
           comboImage: uploadStream.id.toString(),
           filename: req.file.originalname,
           contentType: req.file.mimetype,
