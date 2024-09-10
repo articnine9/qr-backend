@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const mongodb = require("mongodb");
 const db = require("../modals/mongodb");
+const { ObjectId } = require('mongodb'); 
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -110,30 +111,29 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
     }});
 
 
-comboRouter.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid ID format" });
-    }
-
-    const database = await db.getDatabase();
-    const metadataCollection = database.collection("combos");
-
-    const result = await metadataCollection.deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Combo not found" });
-    }
-
-    console.log("Combo deleted successfully");
-    res.status(200).json({ message: "Combo deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting combo:", error);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
-  }
-});
+    comboRouter.delete("/:id", async (req, res) => {
+        try {
+          const { id } = req.params;
+      
+          if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid ID format" });
+          }
+      
+          const database = await db.getDatabase();
+          const metadataCollection = database.collection("combos");
+      
+          const result = await metadataCollection.deleteOne({ _id: new ObjectId(id) });
+      
+          if (result.deletedCount === 0) {
+            return res.status(404).json({ message: "Combo not found" });
+          }
+      
+          res.status(200).json({ message: "Combo deleted successfully" });
+        } catch (error) {
+          console.error("Error deleting combo:", error);
+          res.status(500).json({ message: "Internal server error.", error: error.message });
+        }
+      });
 
 
 
