@@ -104,11 +104,6 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
       const objectId = new mongodb.ObjectId(fileId);
       const downloadStream = bucket.openDownloadStream(objectId);
   
-      downloadStream.on('error', (error) => {
-        console.error('Error retrieving file:', error);
-        res.status(500).json({ message: 'Error retrieving file', error: error.message });
-      });
-  
       // Fetch file metadata from the database
       const database = await db.getDatabase();
       const metadataCollection = database.collection('combos');
@@ -119,14 +114,28 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
       }
   
       // Set the appropriate Content-Type header
-      res.setHeader('Content-Type', fileMetadata.contentType || 'image/jpeg');
+      const contentType = fileMetadata.contentType || 'image/jpeg';
+      res.setHeader('Content-Type', contentType);
+  
+      // Handle stream errors
+      downloadStream.on('error', (error) => {
+        console.error('Error retrieving file:', error);
+        res.status(500).json({ message: 'Error retrieving file', error: error.message });
+      });
+  
+      // Pipe the stream to response
       downloadStream.pipe(res);
+  
+      // Optional: Handle stream finish
+      downloadStream.on('end', () => {
+        console.log('Stream ended');
+      });
+  
     } catch (error) {
       console.error('Error processing request:', error);
       res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   });
-
 
 comboRouter.delete("/:id", async (req, res) => {
   try {
@@ -142,7 +151,6 @@ comboRouter.delete("/:id", async (req, res) => {
     const result = await metadataCollection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
-      console.log("Combo not found");
       return res.status(404).json({ message: "Combo not found" });
     }
 
