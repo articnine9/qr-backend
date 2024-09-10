@@ -2,7 +2,6 @@ const express = require("express");
 const multer = require("multer");
 const mongodb = require("mongodb");
 const db = require("../modals/mongodb");
-const { ObjectId } = require('mongodb');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -30,7 +29,7 @@ comboRouter.use(async (req, res, next) => {
   }
 });
 
-comboRouter.get("/combos", async (req, res) => {
+comboRouter.get("/combo", async (req, res) => {
   try {
     const database = await db.getDatabase();
     const metadataCollection = database.collection("combos");
