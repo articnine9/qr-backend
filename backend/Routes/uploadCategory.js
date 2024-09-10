@@ -140,43 +140,26 @@ categoryRouter.get("/image/:fileId", async (req, res) => {
 categoryRouter.delete('/category/:id', async (req, res) => {
   const { id } = req.params;
 
-  if (!ObjectId.isValid(id)) {
+  if (!mongodb.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'Invalid category ID format' });
   }
 
   try {
     const database = await db.getDatabase();
     const categoriesCollection = database.collection('categories');
-    const bucket = new GridFSBucket(database);
-
-    // Find the category
-    const category = await categoriesCollection.findOne({ _id: new ObjectId(id) });
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
+    
+    const category = await categoriesCollection.findOne({ _id: new mongodb.ObjectId(id) });
+    if (category && category.fileId) {
+      const fileId = category.fileId;
+      const bucket = new mongodb.GridFSBucket(await db.getDatabase());
+      bucket.delete(new mongodb.ObjectId(fileId), (err) => {
+        if (err) {
+          console.error('Error deleting image:', err);
+        }
+      });
     }
 
-    // Delete associated file if exists
-    if (category.fileId) {
-      const fileId = new ObjectId(category.fileId);
-      try {
-        await new Promise((resolve, reject) => {
-          bucket.delete(fileId, (err) => {
-            if (err) {
-              console.error('Error deleting file from GridFS:', err);
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
-      } catch (error) {
-        console.error('Error deleting file from GridFS:', error);
-        // Consider responding with an error status or proceed with deleting the category anyway
-      }
-    }
-
-    // Delete the category
-    const result = await categoriesCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await categoriesCollection.deleteOne({ _id: new mongodb.ObjectId(id) });
     if (result.deletedCount === 1) {
       res.status(200).json({ message: 'Category deleted successfully' });
     } else {
