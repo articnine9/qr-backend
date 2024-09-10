@@ -123,36 +123,29 @@ comboRouter.get("/image/:fileId", async (req, res) => {
   }
 });
 
-comboRouter.delete("/combos/:id", async (req, res) => {
-  const { id } = req.params;
-
-  if (!mongodb.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid ID format" });
-  }
-
-  try {
-    const objectId = new mongodb.ObjectId(id);
-
+comboRouter.delete("/:id", async (req, res) => {
     try {
-      await bucket.delete(objectId);
+      const { id } = req.params;
+  
+      if (!id) {
+        return res.status(400).json({ message: "ID is required" });
+      }
+  
+      const database = await db.getDatabase();
+      const metadataCollection = database.collection("combos");
+  
+      const result = await metadataCollection.deleteOne({ _id: new ObjectId(id) });
+  
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: "Combo not found" });
+      }
+  
+      res.status(200).json({ message: "Combo deleted successfully" });
     } catch (error) {
-      console.error("Error deleting file from GridFS:", error);
-      return res.status(500).json({ message: "Error deleting file from GridFS.", error: error.message });
+      console.error("Error deleting combo:", error);
+      res.status(500).json({ message: "Internal server error.", error: error.message });
     }
-
-    const database = await db.getDatabase();
-    const metadataCollection = database.collection("combos");
-    const result = await metadataCollection.deleteOne({ _id: objectId });
-
-    if (result.deletedCount === 1) {
-      res.status(200).json({ message: "Combo deleted successfully." });
-    } else {
-      res.status(404).json({ message: "Combo metadata not found" });
-    }
-  } catch (error) {
-    console.error("Error deleting combo:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
-  }
-});
+  });
+  
 
 module.exports = comboRouter;
