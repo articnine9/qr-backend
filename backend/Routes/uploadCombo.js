@@ -42,55 +42,54 @@ comboRouter.get("/combos", async (req, res) => {
 });
 
 comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
-  try {
-    const { comboName } = req.body;
-  const comboItems = req.body.comboItems;
-  const comboImage = req.file; // For single file upload
-
-
-  if (!comboName || !comboItems || !comboImage) {
-      return res.status(400).json({ message: "Name, items, and image are required" });
-    }
-
-    // Upload image to GridFS
-    const uploadStream = bucket.openUploadStream(req.file.originalname, {
-      contentType: req.file.mimetype,
-    });
-
-    uploadStream.end(req.file.buffer);
-
-    uploadStream.on("finish", async () => {
-      try {
-        const database = await db.getDatabase();
-        const metadataCollection = database.collection("combos");
-        await metadataCollection.insertOne({
-          comboName,
-          comboItems: JSON.parse(items), 
-          comboImage: uploadStream.id.toString(),
-          filename: req.file.originalname,
-          contentType: req.file.mimetype,
-          uploadDate: new Date(),
-        });
-
-        res.status(200).json({
-          message: "Combo added successfully",
-          fileId: uploadStream.id.toString(),
-        });
-      } catch (error) {
-        console.error("Error inserting combo metadata:", error);
-        res.status(500).json({ message: "Error storing combo metadata.", error: error.message });
+    try {
+      const { comboName } = req.body;
+      const comboItems = JSON.parse(req.body.comboItems); 
+      const comboImage = req.file; 
+  
+      if (!comboName || !comboItems || !comboImage) {
+        return res.status(400).json({ message: "Name, items, and image are required" });
       }
-    });
-
-    uploadStream.on("error", (error) => {
-      console.error("Error uploading file:", error);
-      res.status(500).json({ message: "Error uploading file.", error: error.message });
-    });
-  } catch (error) {
-    console.error("Error handling request:", error);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
-  }
-});
+  
+      const uploadStream = bucket.openUploadStream(req.file.originalname, {
+        contentType: req.file.mimetype,
+      });
+  
+      uploadStream.end(req.file.buffer);
+  
+      uploadStream.on("finish", async () => {
+        try {
+          const database = await db.getDatabase();
+          const metadataCollection = database.collection("combos");
+          await metadataCollection.insertOne({
+            comboName,
+            comboItems, 
+            comboImage: uploadStream.id.toString(),
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+            uploadDate: new Date(),
+          });
+  
+          res.status(200).json({
+            message: "Combo added successfully",
+            fileId: uploadStream.id.toString(),
+          });
+        } catch (error) {
+          console.error("Error inserting combo metadata:", error);
+          res.status(500).json({ message: "Error storing combo metadata.", error: error.message });
+        }
+      });
+  
+      uploadStream.on("error", (error) => {
+        console.error("Error uploading file:", error);
+        res.status(500).json({ message: "Error uploading file.", error: error.message });
+      });
+    } catch (error) {
+      console.error("Error handling request:", error);
+      res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+  });
+  
 
 comboRouter.get("/image/:fileId", async (req, res) => {
   const { fileId } = req.params;
