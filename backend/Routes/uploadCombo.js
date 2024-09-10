@@ -92,47 +92,47 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
   });
   
 
-comboRouter.get("/image/:fileId", async (req, res) => {
-  const { fileId } = req.params;
-
-  if (!mongodb.ObjectId.isValid(fileId)) {
-    return res.status(400).json({ message: "Invalid file ID format" });
-  }
-
-  try {
-    const objectId = new mongodb.ObjectId(fileId);
-    const downloadStream = bucket.openDownloadStream(objectId);
-
-    downloadStream.on("error", (error) => {
-      console.error("Error retrieving file:", error);
-      res.status(500).json({ message: "Error retrieving file", error: error.message });
-    });
-
-    const database = await db.getDatabase();
-    const metadataCollection = database.collection("combos");
-    const fileMetadata = await metadataCollection.findOne({ comboImage: fileId });
-
-    if (!fileMetadata) {
-      return res.status(404).json({ message: "File metadata not found" });
+  comboRouter.get('/image/:fileId', async (req, res) => {
+    const { fileId } = req.params;
+  
+    // Validate ObjectId format
+    if (!mongodb.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ message: 'Invalid file ID format' });
     }
-
-    res.setHeader("Content-Type", fileMetadata.contentType || "image/jpeg");
-    downloadStream.pipe(res);
-  } catch (error) {
-    console.error("Error processing request:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
-  }
-});
-
+  
+    try {
+      const objectId = new mongodb.ObjectId(fileId);
+      const downloadStream = bucket.openDownloadStream(objectId);
+  
+      downloadStream.on('error', (error) => {
+        console.error('Error retrieving file:', error);
+        res.status(500).json({ message: 'Error retrieving file', error: error.message });
+      });
+  
+      // Fetch file metadata from the database
+      const database = await db.getDatabase();
+      const metadataCollection = database.collection('combos');
+      const fileMetadata = await metadataCollection.findOne({ comboImage: fileId });
+  
+      if (!fileMetadata) {
+        return res.status(404).json({ message: 'File metadata not found' });
+      }
+  
+      // Set the appropriate Content-Type header
+      res.setHeader('Content-Type', fileMetadata.contentType || 'image/jpeg');
+      downloadStream.pipe(res);
+    } catch (error) {
+      console.error('Error processing request:', error);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+  });
 
 
 comboRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Received ID:", id);
 
     if (!ObjectId.isValid(id)) {
-      console.log("Invalid ID format");
       return res.status(400).json({ message: "Invalid ID format" });
     }
 
