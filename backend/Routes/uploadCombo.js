@@ -92,51 +92,23 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
   });
   
 
-  comboRouter.get('/image/:fileId', async (req, res) => {
+  comboRouter.get("/image/:fileId", async (req, res) => {
     const { fileId } = req.params;
-  
-    // Validate ObjectId format
-    if (!mongodb.ObjectId.isValid(fileId)) {
-      return res.status(400).json({ message: 'Invalid file ID format' });
-    }
-  
     try {
       const objectId = new mongodb.ObjectId(fileId);
       const downloadStream = bucket.openDownloadStream(objectId);
   
-      // Fetch file metadata from the database
-      const database = await db.getDatabase();
-      const metadataCollection = database.collection('combos');
-      const fileMetadata = await metadataCollection.findOne({ comboImage: fileId });
-  
-      if (!fileMetadata) {
-        return res.status(404).json({ message: 'File metadata not found' });
-      }
-  
-      // Set the appropriate Content-Type header
-      const contentType = fileMetadata.contentType || 'image/jpeg';
-      res.setHeader('Content-Type', contentType);
-  
-      // Handle stream errors
-      downloadStream.on('error', (error) => {
-        console.error('Error retrieving file:', error);
-        res.status(500).json({ message: 'Error retrieving file', error: error.message });
+      downloadStream.on("error", (error) => {
+        console.error("Error retrieving file:", error);
+        res.status(500).json({ message: "Error retrieving file", error: error.message });
       });
   
-      // Pipe the stream to response
+      res.setHeader("Content-Type", "image/jpeg");
       downloadStream.pipe(res);
-  
-      // Optional: Handle stream finish
-      downloadStream.on('end', () => {
-        console.log('Stream ended');
-      });
-  
     } catch (error) {
-      console.error('Error processing request:', error);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
-  });
-
+      console.error("Error processing request:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }});
 comboRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
