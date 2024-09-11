@@ -17,14 +17,17 @@ cartRouter.get("/items", async (req, res) => {
 }); 
  
 cartRouter.post("/cartitems", async (req, res) => {
-  const { tableNumber, items } = req.body;
+  const { tableNumber, items, combos } = req.body;
 
-  if (typeof tableNumber !== "number" || !Array.isArray(items)) {
+  if (typeof tableNumber !== "number" || !Array.isArray(items) || !Array.isArray(combos)) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
   }
 
-  
+  if (items.length === 0 && combos.length === 0) {
+    return res.status(400).json({ error: "No items or combos provided" });
+  }
+
   const itemsWithStatus = items.map(item => ({
     ...item,
     status: item.status || "Not Served" 
@@ -33,7 +36,7 @@ cartRouter.post("/cartitems", async (req, res) => {
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
-    const result = await collection.insertOne({ tableNumber, items: itemsWithStatus });
+    const result = await collection.insertOne({ tableNumber, items: itemsWithStatus, combos });
 
     if (result.acknowledged) {
       res.status(201).json({ message: "Cart saved successfully" });
