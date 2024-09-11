@@ -44,12 +44,13 @@ comboRouter.get("/combo", async (req, res) => {
 
 comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
   try {
-    const { comboName, comboPrice } = req.body;
+    const { comboName, comboPrice,comboType } = req.body;
     const comboItems = JSON.parse(req.body.comboItems);
     const comboImage = req.file;
 
-    if (!comboName || !comboItems || !comboImage || !comboPrice) {
-      return res.status(400).json({ message: "Name, items, image, and price are required" });
+    console.log('Received data:', { comboName, comboPrice, comboType, comboItems, comboImage });
+    if (!comboName || !comboItems || !comboImage || !comboPrice||!comboType) {
+      return res.status(400).json({ message: "Name, items, image, type, and price are required" });
     }
 
     const uploadStream = bucket.openUploadStream(req.file.originalname, {
@@ -62,10 +63,14 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
       try {
         const database = await db.getDatabase();
         const metadataCollection = database.collection("combos");
+
         await metadataCollection.insertOne({
           comboName,
-          comboPrice, // Save the comboPrice
-          comboItems,
+          comboPrice,
+          comboItems,    
+          comboType, 
+          comboCategoryName: "combo", 
+          comboStatus: "Not Served",
           comboImage: uploadStream.id.toString(),
           filename: req.file.originalname,
           contentType: req.file.mimetype,
@@ -103,7 +108,6 @@ comboRouter.get("/image/:fileId", async (req, res) => {
       res.status(500).json({ message: "Error retrieving file", error: error.message });
     });
 
-    // Use metadata to set the correct Content-Type
     const file = await bucket.find({ _id: objectId }).toArray();
     if (file.length === 0) {
       return res.status(404).json({ message: "File not found" });
