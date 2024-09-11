@@ -70,7 +70,6 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
           comboItems,    
           comboType, 
           comboCategoryName: "combo", 
-          comboStatus: "Not Served",
           comboImage: uploadStream.id.toString(),
           filename: req.file.originalname,
           contentType: req.file.mimetype,
