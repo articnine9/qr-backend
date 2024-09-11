@@ -48,7 +48,7 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
     const comboItems = JSON.parse(req.body.comboItems);
     const comboImage = req.file;
 
-    console.log('Received data:', { comboName, comboPrice, comboType, comboItems, comboImage });
+
     if (!comboName || !comboItems || !comboImage || !comboPrice||!comboType) {
       return res.status(400).json({ message: "Name, items, image, type, and price are required" });
     }
@@ -139,7 +139,6 @@ comboRouter.delete("/:id", async (req, res) => {
     }
 
     await metadataCollection.deleteOne({ _id: new ObjectId(id) });
-    // Optionally, delete the associated file from GridFS
     await bucket.delete(new ObjectId(combo.comboImage));
 
     res.status(200).json({ message: "Combo deleted successfully" });
