@@ -32,11 +32,14 @@ cartRouter.post("/cartitems", async (req, res) => {
     ...item,
     status: item.status || "Not Served" 
   }));
-
+  const comboWithStatus = combos.map(combo => ({
+    ...combo,
+    status: combo.status || "Not Served" 
+  }));
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
-    const result = await collection.insertOne({ tableNumber, items: itemsWithStatus, combos });
+    const result = await collection.insertOne({ tableNumber, items: itemsWithStatus, combos:comboWithStatus });
 
     if (result.acknowledged) {
       res.status(201).json({ message: "Cart saved successfully" });
