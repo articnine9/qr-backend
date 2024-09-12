@@ -59,40 +59,50 @@ cartRouter.post("/cartitems", async (req, res) => {
     res.status(500).json({ error: "Error saving cart" });
   }
 });
+const { ObjectId } = require('mongodb'); // Import ObjectId if it's not already imported
 
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
 
-  if (
-    !Array.isArray(updatedItems) ||
-    !Array.isArray(updatedCombos) ||
-    updatedItems.some(
-      (items) =>
-        !items._id ||
-        !items.name ||
-        !items.type ||
-        !items.price ||
-        !items.categoryName ||
-        !items.count ||
-        !items.status
-    ) ||
-    updatedCombos.some(
-      (combos) =>
-        !combos._id ||
-        !combos.name ||
-        !combos.items ||
-        !combos.type ||
-        !combos.price ||
-        !combos.categoryName ||
-        !combos.count ||
-        !combos.status
-    )
-  ) {
-    console.error("Invalid input data:", req.body);
-    console.log("Request Body:", req.body);
+  // Validation function for items
+  const validateItem = (item) => {
+    if (!item._id) return "Missing _id";
+    if (!item.name) return "Missing name";
+    if (!item.type) return "Missing type";
+    if (!item.price) return "Missing price";
+    if (!item.categoryName) return "Missing categoryName";
+    if (!item.count) return "Missing count";
+    if (!item.status) return "Missing status";
+    return null;
+  };
 
-    return res.status(400).json({ error: "Invalid input data" });
+  // Validation function for combos
+  const validateCombo = (combo) => {
+    if (!combo._id) return "Missing _id";
+    if (!combo.name) return "Missing name";
+    if (!combo.items) return "Missing items";
+    if (!combo.type) return "Missing type";
+    if (!combo.price) return "Missing price";
+    if (!combo.categoryName) return "Missing categoryName";
+    if (!combo.count) return "Missing count";
+    if (!combo.status) return "Missing status";
+    return null;
+  };
+
+  // Perform validation
+  const itemErrors = updatedItems.map(validateItem).filter(Boolean);
+  const comboErrors = updatedCombos.map(validateCombo).filter(Boolean);
+
+  if (itemErrors.length > 0 || comboErrors.length > 0) {
+    console.error("Invalid input data:", { itemErrors, comboErrors });
+    return res.status(400).json({ error: "Invalid input data", itemErrors, comboErrors });
+  }
+
+  // Ensure `id` is a valid ObjectId
+  if (!ObjectId.isValid(id)) {
+    console.error("Invalid ObjectId:", id);
+    return res.status(400).json({ error: "Invalid ObjectId" });
   }
 
   try {
@@ -111,10 +121,9 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating cart:", error);
-    res
-      .status(500)
-      .json({ error: "Error updating cart", details: error.message });
+    res.status(500).json({ error: "Error updating cart", details: error.message });
   }
 });
+
 
 module.exports = cartRouter;
