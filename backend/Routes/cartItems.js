@@ -55,10 +55,11 @@ cartRouter.post("/cartitems", async (req, res) => {
  
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
-  const { updatedItems } = req.body;
+  const { updatedItems,updatedCombos } = req.body;
 
   if (
     !Array.isArray(updatedItems) ||
+    !Array.isArray(updatedCombos) ||
     updatedItems.some(
       (item) =>
         !item._id ||
@@ -68,6 +69,17 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !item.categoryName ||
         !item.count ||
         !item.status 
+    ) ||
+    updatedCombos.some(
+      (combo) =>
+        !combo._id ||
+        !combo.name ||
+        !combo.items ||
+        !combo.type ||
+        !combo.price ||
+        !combo.categoryName ||
+        !combo.count ||
+        !combo.status 
     )
   ) {
     console.error("Invalid input data:", req.body);
@@ -80,7 +92,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { items: updatedItems } }
+      { $set: { items: updatedItems, combos: updatedCombos } }
     );
 
     if (result.modifiedCount > 0) {
