@@ -64,9 +64,17 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
 
+  // Validate updatedItems and updatedCombos if they are present
   if (
-    !Array.isArray(updatedItems) ||
-    !Array.isArray(updatedCombos) ||
+    (updatedItems && !Array.isArray(updatedItems)) ||
+    (updatedCombos && !Array.isArray(updatedCombos))
+  ) {
+    console.error("Invalid input data:", req.body);
+    return res.status(400).json({ error: "Invalid input data" });
+  }
+
+  if (
+    updatedItems &&
     updatedItems.some(
       (item) =>
         !item._id ||
@@ -76,7 +84,14 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !item.categoryName ||
         !item.count ||
         !item.status
-    ) ||
+    )
+  ) {
+    console.error("Invalid item data:", updatedItems);
+    return res.status(400).json({ error: "Invalid item data" });
+  }
+
+  if (
+    updatedCombos &&
     updatedCombos.some(
       (combo) =>
         !combo._id ||
@@ -89,17 +104,27 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !combo.status
     )
   ) {
-    console.error("Invalid input data:", req.body);
-    return res.status(400).json({ error: "Invalid input data" });
+    console.error("Invalid combo data:", updatedCombos);
+    return res.status(400).json({ error: "Invalid combo data" });
   }
 
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
+    // Build the update query conditionally
+    const updateQuery = {};
+    if (updatedItems) {
+      updateQuery.items = updatedItems;
+    }
+    if (updatedCombos) {
+      updateQuery.combos = updatedCombos;
+    }
+
+    // Perform the update
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { items: updatedItems, combos: updatedCombos } }
+      { $set: updateQuery }
     );
 
     if (result.modifiedCount > 0) {
@@ -114,5 +139,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       .json({ error: "Error updating cart", details: error.message });
   }
 });
+
 
 module.exports = cartRouter;
