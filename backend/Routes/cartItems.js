@@ -68,28 +68,30 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     !Array.isArray(updatedItems) ||
     !Array.isArray(updatedCombos) ||
     updatedItems.some(
-      (item) =>
-        !item._id ||
-        !item.name ||
-        !item.type ||
-        !item.price ||
-        !item.categoryName ||
-        !item.count ||
-        !item.status
+      (items) =>
+        !items._id ||
+        !items.name ||
+        !items.type ||
+        !items.price ||
+        !items.categoryName ||
+        !items.count ||
+        !items.status
     ) ||
     updatedCombos.some(
-      (combo) =>
-        !combo._id ||
-        !combo.name ||
-        !combo.items ||
-        !combo.type ||
-        !combo.price ||
-        !combo.categoryName ||
-        !combo.count ||
-        !combo.status
+      (combos) =>
+        !combos._id ||
+        !combos.name ||
+        !combos.items ||
+        !combos.type ||
+        !combos.price ||
+        !combos.categoryName ||
+        !combos.count ||
+        !combos.status
     )
   ) {
     console.error("Invalid input data:", req.body);
+    console.log("Request Body:", req.body);
+
     return res.status(400).json({ error: "Invalid input data" });
   }
 
