@@ -1,25 +1,29 @@
-const express = require("express"); 
-const db = require("../modals/mongodb"); 
-const { ObjectId } = require("mongodb"); 
- 
-const cartRouter = express.Router(); 
- 
-cartRouter.get("/items", async (req, res) => { 
-  try { 
-    const database = await db.getDatabase(); 
-    const collection = database.collection("cart"); 
-    const carts = await collection.find({}).toArray(); 
-    res.status(200).json(carts); 
-  } catch (err) { 
-    console.error("Error fetching cart items:", err); 
-    res.status(500).json({ message: "Internal server error" }); 
-  } 
-}); 
- 
+const express = require("express");
+const db = require("../modals/mongodb");
+const { ObjectId } = require("mongodb");
+
+const cartRouter = express.Router();
+
+cartRouter.get("/items", async (req, res) => {
+  try {
+    const database = await db.getDatabase();
+    const collection = database.collection("cart");
+    const carts = await collection.find({}).toArray();
+    res.status(200).json(carts);
+  } catch (err) {
+    console.error("Error fetching cart items:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 cartRouter.post("/cartitems", async (req, res) => {
   const { tableNumber, items, combos } = req.body;
 
-  if (typeof tableNumber !== "number" || !Array.isArray(items) || !Array.isArray(combos)) {
+  if (
+    typeof tableNumber !== "number" ||
+    !Array.isArray(items) ||
+    !Array.isArray(combos)
+  ) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
   }
@@ -28,18 +32,22 @@ cartRouter.post("/cartitems", async (req, res) => {
     return res.status(400).json({ error: "No items or combos provided" });
   }
 
-  const itemsWithStatus = items.map(item => ({
+  const itemsWithStatus = items.map((item) => ({
     ...item,
-    status: item.status || "Not Served" 
+    status: item.status || "Not Served",
   }));
-  const comboWithStatus = combos.map(combo => ({
+  const comboWithStatus = combos.map((combo) => ({
     ...combo,
-    status: combo.status || "Not Served" 
+    status: combo.status || "Not Served",
   }));
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
-    const result = await collection.insertOne({ tableNumber, items: itemsWithStatus, combos:comboWithStatus });
+    const result = await collection.insertOne({
+      tableNumber,
+      items: itemsWithStatus,
+      combos: comboWithStatus,
+    });
 
     if (result.acknowledged) {
       res.status(201).json({ message: "Cart saved successfully" });
@@ -52,10 +60,9 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
- 
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
-  const { updatedItems,updatedCombos } = req.body;
+  const { updatedItems, updatedCombos } = req.body;
 
   if (
     !Array.isArray(updatedItems) ||
@@ -68,7 +75,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !item.price ||
         !item.categoryName ||
         !item.count ||
-        !item.status 
+        !item.status
     ) ||
     updatedCombos.some(
       (combo) =>
@@ -79,7 +86,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
         !combo.price ||
         !combo.categoryName ||
         !combo.count ||
-        !combo.status 
+        !combo.status
     )
   ) {
     console.error("Invalid input data:", req.body);
@@ -102,9 +109,10 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating cart:", error);
-    res.status(500).json({ error: "Error updating cart", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Error updating cart", details: error.message });
   }
 });
 
- 
 module.exports = cartRouter;
