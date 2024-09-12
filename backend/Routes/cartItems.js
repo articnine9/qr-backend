@@ -59,7 +59,6 @@ cartRouter.post("/cartitems", async (req, res) => {
     res.status(500).json({ error: "Error saving cart" });
   }
 });
-const { ObjectId } = require('mongodb'); // Import ObjectId if it's not already imported
 
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
