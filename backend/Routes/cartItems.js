@@ -59,9 +59,11 @@ cartRouter.post("/cartitems", async (req, res) => {
     res.status(500).json({ error: "Error saving cart" });
   }
 });
+
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
+
 
   if (
     (updatedItems && !Array.isArray(updatedItems)) ||
@@ -75,6 +77,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     updatedItems &&
     updatedItems.some(
       (item) =>
+        !item ||
         !item._id ||
         !item.status
     )
@@ -87,6 +90,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     updatedCombos &&
     updatedCombos.some(
       (combo) =>
+        !combo ||
         !combo._id ||
         !combo.status
     )
@@ -99,7 +103,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    // Fetch the current data for the cart item
     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!cartItem) {
@@ -146,6 +149,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     res.status(500).json({ error: "Error updating cart", details: error.message });
   }
 });
+
 
 
 
