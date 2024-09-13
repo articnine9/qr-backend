@@ -64,7 +64,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
 
-
   if (
     (updatedItems && !Array.isArray(updatedItems)) ||
     (updatedCombos && !Array.isArray(updatedCombos))
@@ -73,38 +72,11 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     return res.status(400).json({ error: "Invalid input data" });
   }
 
-  if (
-    updatedItems &&
-    updatedItems.some(
-      (item) =>
-        !item ||
-        !item._id ||
-        !item.status
-    )
-  ) {
-    console.error("Invalid item data:", updatedItems);
-    return res.status(400).json({ error: "Invalid item data" });
-  }
-
-  if (
-    updatedCombos &&
-    updatedCombos.some(
-      (combo) =>
-        !combo ||
-        !combo._id ||
-        !combo.status
-    )
-  ) {
-    console.error("Invalid combo data:", updatedCombos);
-    return res.status(400).json({ error: "Invalid combo data" });
-  }
-
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
-
     if (!cartItem) {
       console.error(`Cart item with ID ${id} not found`);
       return res.status(404).json({ error: "Cart item not found" });
@@ -112,7 +84,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
 
     const updateOperations = [];
 
-    if (updatedItems.length>0) {
+    if (updatedItems.length > 0) {
       updatedItems.forEach((updatedItem) => {
         updateOperations.push({
           updateOne: {
@@ -123,7 +95,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       });
     }
 
-    if (updatedCombos.length>0) {
+    if (updatedCombos.length > 0) {
       updatedCombos.forEach((updatedCombo) => {
         updateOperations.push({
           updateOne: {
@@ -137,12 +109,16 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     if (updateOperations.length > 0) {
       const result = await collection.bulkWrite(updateOperations);
 
+      console.log("BulkWrite result:", result);
+
       if (result.modifiedCount > 0) {
         res.status(200).json({ message: "Cart updated successfully" });
       } else {
+        console.error("No items or combos were updated");
         res.status(404).json({ error: "No items or combos were updated" });
       }
     } else {
+      console.error("No valid updates provided");
       res.status(400).json({ error: "No valid updates provided" });
     }
   } catch (error) {
@@ -150,6 +126,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     res.status(500).json({ error: "Error updating cart", details: error.message });
   }
 });
+
 
 
 
