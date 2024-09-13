@@ -71,7 +71,21 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
   }
+  if (
+    updatedItems &&
+    updatedItems.some((item) => !item || !item._id || !item.status)
+  ) {
+    console.error("Invalid item data:", updatedItems);
+    return res.status(400).json({ error: "Invalid item data" });
+  }
 
+  if (
+    updatedCombos &&
+    updatedCombos.some((combo) => !combo || !combo._id || !combo.status)
+  ) {
+    console.error("Invalid combo data:", updatedCombos);
+    return res.status(400).json({ error: "Invalid combo data" });
+  }
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
@@ -88,9 +102,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       updatedItems.forEach((updatedItem) => {
         updateOperations.push({
           updateOne: {
-            filter: { _id: new ObjectId(id), 'items._id': updatedItem._id },
-            update: { $set: { 'items.$.status': updatedItem.status } }
-          }
+            filter: {
+              _id: new ObjectId(id),
+              "items._id": updatedItem._id,
+              "items.status": { $ne: updatedItem.status },
+            },
+            update: { $set: { "items.$.status": updatedItem.status } },
+          },
         });
       });
     }
@@ -99,9 +117,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       updatedCombos.forEach((updatedCombo) => {
         updateOperations.push({
           updateOne: {
-            filter: { _id: new ObjectId(id), 'combos._id': updatedCombo._id },
-            update: { $set: { 'combos.$.status': updatedCombo.status } }
-          }
+            filter: {
+              _id: new ObjectId(id),
+              "combos._id": updatedCombo._id,
+              "combos.status": { $ne: updatedCombo.status },
+            },
+            update: { $set: { "combos.$.status": updatedCombo.status } },
+          },
         });
       });
     }
@@ -123,12 +145,10 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating cart:", error);
-    res.status(500).json({ error: "Error updating cart", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Error updating cart", details: error.message });
   }
 });
-
-
-
-
 
 module.exports = cartRouter;
