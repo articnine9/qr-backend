@@ -106,12 +106,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!cartItem) {
+      console.error(`Cart item with ID ${id} not found`);
       return res.status(404).json({ error: "Cart item not found" });
     }
 
     const updateOperations = [];
 
-    if (updatedItems) {
+    if (updatedItems.length>0) {
       updatedItems.forEach((updatedItem) => {
         updateOperations.push({
           updateOne: {
@@ -122,7 +123,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       });
     }
 
-    if (updatedCombos) {
+    if (updatedCombos.length>0) {
       updatedCombos.forEach((updatedCombo) => {
         updateOperations.push({
           updateOne: {
