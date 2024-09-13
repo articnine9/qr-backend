@@ -88,7 +88,21 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
   }
+  if (
+    updatedItems &&
+    updatedItems.some((item) => !item || !item._id || !item.status)
+  ) {
+    console.error("Invalid item data:", updatedItems);
+    return res.status(400).json({ error: "Invalid item data" });
+  }
 
+  if (
+    updatedCombos &&
+    updatedCombos.some((combo) => !combo || !combo._id || !combo.status)
+  ) {
+    console.error("Invalid combo data:", updatedCombos);
+    return res.status(400).json({ error: "Invalid combo data" });
+  }
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
@@ -101,13 +115,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
 
     const updateOperations = [];
 
-    if (updatedItems && updatedItems.length > 0) {
+    if (updatedItems.length > 0) {
       updatedItems.forEach((updatedItem) => {
         updateOperations.push({
           updateOne: {
             filter: {
               _id: new ObjectId(id),
-              "items._id": new ObjectId(updatedItem._id),
+              "items._id": updatedItem._id,
               "items.status": { $ne: updatedItem.status },
             },
             update: { $set: { "items.$.status": updatedItem.status } },
@@ -116,13 +130,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       });
     }
 
-    if (updatedCombos && updatedCombos.length > 0) {
+    if (updatedCombos.length > 0) {
       updatedCombos.forEach((updatedCombo) => {
         updateOperations.push({
           updateOne: {
             filter: {
               _id: new ObjectId(id),
-              "combos._id": new ObjectId(updatedCombo._id),
+              "combos._id": updatedCombo._id,
               "combos.status": { $ne: updatedCombo.status },
             },
             update: { $set: { "combos.$.status": updatedCombo.status } },
