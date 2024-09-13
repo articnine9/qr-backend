@@ -103,7 +103,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    // Fetch the current data for the cart item
     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!cartItem) {
