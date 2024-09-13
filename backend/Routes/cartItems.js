@@ -15,7 +15,6 @@ cartRouter.get("/items", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 cartRouter.post("/cartitems", async (req, res) => {
   const { tableNumber, items, combos } = req.body;
 
@@ -60,6 +59,24 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
@@ -90,7 +107,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
           updateOne: {
             filter: {
               _id: new ObjectId(id),
-              "items._id": updatedItem._id,
+              "items._id": new ObjectId(updatedItem._id),
               "items.status": { $ne: updatedItem.status },
             },
             update: { $set: { "items.$.status": updatedItem.status } },
@@ -105,7 +122,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
           updateOne: {
             filter: {
               _id: new ObjectId(id),
-              "combos._id": updatedCombo._id,
+              "combos._id": new ObjectId(updatedCombo._id),
               "combos.status": { $ne: updatedCombo.status },
             },
             update: { $set: { "combos.$.status": updatedCombo.status } },
