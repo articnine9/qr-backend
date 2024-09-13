@@ -64,7 +64,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
 
-  // Check if updatedItems and updatedCombos are arrays
+
   if (
     (updatedItems && !Array.isArray(updatedItems)) ||
     (updatedCombos && !Array.isArray(updatedCombos))
@@ -73,29 +73,26 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     return res.status(400).json({ error: "Invalid input data" });
   }
 
-  // Validate updatedItems
   if (
     updatedItems &&
     updatedItems.some(
       (item) =>
         !item ||
         !item._id ||
-        !item.status // other validations removed for brevity
+        !item.status
     )
   ) {
     console.error("Invalid item data:", updatedItems);
     return res.status(400).json({ error: "Invalid item data" });
   }
 
-  // Validate updatedCombos
   if (
     updatedCombos &&
     updatedCombos.some(
       (combo) =>
         !combo ||
         !combo._id ||
-        !combo.name ||
-        !combo.status // Add more validations as needed
+        !combo.status
     )
   ) {
     console.error("Invalid combo data:", updatedCombos);
@@ -153,7 +150,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     res.status(500).json({ error: "Error updating cart", details: error.message });
   }
 });
-
 
 
 
