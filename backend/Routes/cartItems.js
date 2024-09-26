@@ -60,28 +60,10 @@ cartRouter.post("/cartitems", async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   const { updatedItems, updatedCombos } = req.body;
 
-  // Validate input data
   if ((updatedItems && !Array.isArray(updatedItems)) || 
       (updatedCombos && !Array.isArray(updatedCombos))) {
     console.error("Invalid input data:", req.body);
@@ -102,7 +84,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    // Check if the cart item exists
     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
     if (!cartItem) {
       console.error(`Cart item with ID ${id} not found`);
@@ -111,7 +92,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
 
     const updateOperations = [];
 
-    // Prepare update operations for items
     if (updatedItems && updatedItems.length > 0) {
       updatedItems.forEach(updatedItem => {
         updateOperations.push({
@@ -119,7 +99,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
             filter: {
               _id: new ObjectId(id),
               "items._id": updatedItem._id,
-              "items.status": { $ne: updatedItem.status }, // Ensure status change
+              "items.status": { $ne: updatedItem.status }, 
             },
             update: { $set: { "items.$.status": updatedItem.status } },
           },
@@ -127,7 +107,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       });
     }
 
-    // Prepare update operations for combos
     if (updatedCombos && updatedCombos.length > 0) {
       updatedCombos.forEach(updatedCombo => {
         updateOperations.push({
@@ -135,7 +114,7 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
             filter: {
               _id: new ObjectId(id),
               "combos._id": updatedCombo._id,
-              "combos.status": { $ne: updatedCombo.status }, // Ensure status change
+              "combos.status": { $ne: updatedCombo.status }, 
             },
             update: { $set: { "combos.$.status": updatedCombo.status } },
           },
@@ -143,7 +122,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       });
     }
 
-    // Execute the bulkWrite operation if there are any updates
     if (updateOperations.length > 0) {
       const result = await collection.bulkWrite(updateOperations);
 
