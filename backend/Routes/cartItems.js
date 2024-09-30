@@ -62,6 +62,7 @@ cartRouter.post("/cartitems", async (req, res) => {
 
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
+  console.log("Update request for ID:", id);
   const { updatedItems, updatedCombos } = req.body;
 
   if ((updatedItems && !Array.isArray(updatedItems)) || 
