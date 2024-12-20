@@ -1,5 +1,5 @@
 const express = require("express");
-const db = require("../modals/mongodb").default;
+const db = require("../modals/mongodb");
 const { ObjectId } = require("mongodb");
 
 const cartRouter = express.Router();
@@ -59,31 +59,24 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
+
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   console.log("Update request for ID:", id);
   const { updatedItems, updatedCombos } = req.body;
 
-  if (
-    (updatedItems && !Array.isArray(updatedItems)) ||
-    (updatedCombos && !Array.isArray(updatedCombos))
-  ) {
+  if ((updatedItems && !Array.isArray(updatedItems)) || 
+      (updatedCombos && !Array.isArray(updatedCombos))) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
   }
 
-  if (
-    updatedItems &&
-    updatedItems.some((item) => !item || !item._id || !item.status)
-  ) {
+  if (updatedItems && updatedItems.some(item => !item || !item._id || !item.status)) {
     console.error("Invalid item data:", updatedItems);
     return res.status(400).json({ error: "Invalid item data" });
   }
 
-  if (
-    updatedCombos &&
-    updatedCombos.some((combo) => !combo || !combo._id || !combo.status)
-  ) {
+  if (updatedCombos && updatedCombos.some(combo => !combo || !combo._id || !combo.status)) {
     console.error("Invalid combo data:", updatedCombos);
     return res.status(400).json({ error: "Invalid combo data" });
   }
@@ -101,13 +94,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     const updateOperations = [];
 
     if (updatedItems && updatedItems.length > 0) {
-      updatedItems.forEach((updatedItem) => {
+      updatedItems.forEach(updatedItem => {
         updateOperations.push({
           updateOne: {
             filter: {
               _id: new ObjectId(id),
               "items._id": updatedItem._id,
-              "items.status": { $ne: updatedItem.status },
+              "items.status": { $ne: updatedItem.status }, 
             },
             update: { $set: { "items.$.status": updatedItem.status } },
           },
@@ -116,13 +109,13 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     }
 
     if (updatedCombos && updatedCombos.length > 0) {
-      updatedCombos.forEach((updatedCombo) => {
+      updatedCombos.forEach(updatedCombo => {
         updateOperations.push({
           updateOne: {
             filter: {
               _id: new ObjectId(id),
               "combos._id": updatedCombo._id,
-              "combos.status": { $ne: updatedCombo.status },
+              "combos.status": { $ne: updatedCombo.status }, 
             },
             update: { $set: { "combos.$.status": updatedCombo.status } },
           },
@@ -147,10 +140,9 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating cart:", error);
-    res
-      .status(500)
-      .json({ error: "Error updating cart", details: error.message });
+    res.status(500).json({ error: "Error updating cart", details: error.message });
   }
 });
+
 
 module.exports = cartRouter;
