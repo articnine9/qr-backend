@@ -1,11 +1,13 @@
 const mongodb = require("mongodb");
 const { MongoClient, GridFSBucket } = mongodb;
 
-const url = "mongodb+srv://Articnine:u4DhYKcw8qhHK4cG@cluster0.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const url =
+  "mongodb+srv://Articnine:u4DhYKcw8qhHK4cG@cluster0.p5tqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const dbName = "test";
 
 let client;
 let bucket;
+
 
 async function getDatabase() {
   if (!client) {

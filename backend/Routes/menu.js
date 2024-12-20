@@ -1,5 +1,5 @@
 const express = require("express");
-const db = require("../modals/mongodb");
+const db = require("../modals/mongodb").default;
 const { ObjectId } = require("mongodb");
 
 const menu = express.Router();
@@ -116,4 +116,4 @@ menu.post("/delete", async (req, res) => {
   }
 });
 
-module.exports = menu;
+module.exports = menu; 

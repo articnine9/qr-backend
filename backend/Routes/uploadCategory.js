@@ -108,7 +108,6 @@ categoryRouter.get("/category", async (req, res) => {
   }
 });
 
-
 categoryRouter.get("/image/:fileId", async (req, res) => {
   const { fileId } = req.params;
 

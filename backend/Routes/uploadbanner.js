@@ -147,9 +147,4 @@ bannerRouter.delete("/banners/:fileId", async (req, res) => {
   }
 });
 
-
-
-
-
-
 module.exports = bannerRouter;
