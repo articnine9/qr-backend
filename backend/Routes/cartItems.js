@@ -58,6 +58,28 @@ cartRouter.post("/cartitems", async (req, res) => {
     res.status(500).json({ error: "Error saving cart" });
   }
 });
+const mongoose = require("mongoose");
+
+router.put("/cartitems/:id", async (req, res) => {
+  try {
+    const cartItemId = mongoose.Types.ObjectId(req.params.id);  // Ensure correct ObjectId handling
+    const { updatedItems, updatedCombos } = req.body;
+
+    // Proceed with updating the cart item in the database using cartItemId
+    // Use Mongoose's findByIdAndUpdate or updateOne methods to update the cart item
+    // Example:
+    const updatedCartItem = await Cart.findByIdAndUpdate(
+      cartItemId,
+      { items: updatedItems, combos: updatedCombos },
+      { new: true }
+    );
+
+    res.status(200).json(updatedCartItem);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error updating cart" });
+  }
+});
 
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
