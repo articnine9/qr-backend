@@ -39,5 +39,5 @@ app.use((req, res) => {
 });
 
 app.listen(3500, () => {
-  console.log("Server is running on http://localhost:3500");
+  console.log("Server is running");
 });
