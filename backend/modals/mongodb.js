@@ -11,10 +11,7 @@ let client;
 
 async function getDatabase() {
   if (!client) {
-    client = new MongoClient(url, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    client = new MongoClient(url);
 
     try {
       await client.connect();
