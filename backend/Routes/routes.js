@@ -1,5 +1,5 @@
 const express = require("express");
-const db = require("../modals/mongodb").default;
+const db = require("../modals/mongodb").getDatabase;  
 const { ObjectId } = require("mongodb");
 const route = express.Router();
 
