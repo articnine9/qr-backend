@@ -15,6 +15,7 @@ cartRouter.get("/items", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 cartRouter.post("/cartitems", async (req, res) => {
   const { tableNumber, items, combos } = req.body;
 
