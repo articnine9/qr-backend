@@ -154,12 +154,6 @@ cartRouter.post("/cartitems", async (req, res) => {
 //   }
 // });
 
-cconst express = require("express");
-const db = require("../modals/mongodb");
-const { ObjectId } = require("mongodb");
-
-const cartRouter = express.Router();
-
 cartRouter.put("/cartitems/:id", async (req, res) => {
   const { id } = req.params;
   console.log("Update request for ID:", id);
@@ -263,9 +257,6 @@ cartRouter.put("/cartitems/:id", async (req, res) => {
       .json({ error: "Error updating cart", details: error.message });
   }
 });
-
-module.exports = cartRouter;
-
 
 
 module.exports = cartRouter;
