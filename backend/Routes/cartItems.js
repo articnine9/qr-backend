@@ -204,64 +204,6 @@ cartRouter.post("/cartitems", async (req, res) => {
 //   }
 // });
 
-// cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
-//   const { cartId, itemId } = req.params;
-
-//   try {
-//     const database = await db.getDatabase();
-//     const collection = database.collection("cart");
-
-//     // Correctly create an ObjectId using 'new'
-//     const cartObjectId = new ObjectId(cartId);
-//     const itemObjectId = new ObjectId(itemId);
-
-//     // Find the cart item by its ObjectId
-//     const cart = await collection.findOne({ _id: cartObjectId });
-
-//     if (!cart) {
-//       console.error(`Cart with ID ${cartId} not found`);
-//       return res.status(404).json({ error: "Cart not found" });
-//     }
-
-//     // Find the item within the cart
-//     let item = cart.items.find(
-//       (item) => item._id.toString() === itemObjectId.toString()
-//     );
-//     if (item) {
-//       item.status = "Served";
-//       await collection.updateOne(
-//         { _id: cartObjectId },
-//         { $set: { "items.$[item].status": "Served" } },
-//         { arrayFilters: [{ "item._id": itemObjectId }] }
-//       );
-//       return res
-//         .status(200)
-//         .json({ message: "Item status updated successfully" });
-//     }
-
-//     // Check combos if not found in items
-//     const combo = cart.combos.find(
-//       (combo) => combo._id.toString() === itemObjectId.toString()
-//     );
-//     if (combo) {
-//       combo.status = "Served";
-//       await collection.updateOne(
-//         { _id: cartObjectId },
-//         { $set: { "combos.$[combo].status": "Served" } },
-//         { arrayFilters: [{ "combo._id": itemObjectId }] }
-//       );
-//       return res
-//         .status(200)
-//         .json({ message: "Combo status updated successfully" });
-//     }
-
-//     return res.status(404).json({ error: "Item or Combo not found" });
-//   } catch (err) {
-//     console.error("Error updating item status:", err); 
-//     return res.status(500).json({ error: "Failed to update item status" });
-//   }
-// });
-
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
 
@@ -269,11 +211,11 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    // Correctly create ObjectId from string
+    // Correctly create an ObjectId using 'new'
     const cartObjectId = new ObjectId(cartId);
     const itemObjectId = new ObjectId(itemId);
 
-    // Find the cart document
+    // Find the cart item by its ObjectId
     const cart = await collection.findOne({ _id: cartObjectId });
 
     if (!cart) {
@@ -281,8 +223,10 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    // Find the item in the "items" array
-    let item = cart.items.find((item) => item._id.toString() === itemObjectId.toString());
+    // Find the item within the cart
+    let item = cart.items.find(
+      (item) => item._id.toString() === itemObjectId.toString()
+    );
     if (item) {
       item.status = "Served";
       await collection.updateOne(
@@ -290,11 +234,15 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
         { $set: { "items.$[item].status": "Served" } },
         { arrayFilters: [{ "item._id": itemObjectId }] }
       );
-      return res.status(200).json({ message: "Item status updated successfully" });
+      return res
+        .status(200)
+        .json({ message: "Item status updated successfully" });
     }
 
-    // Check the "combos" array for the combo item
-    let combo = cart.combos.find((combo) => combo._id.toString() === itemObjectId.toString());
+    // Check combos if not found in items
+    const combo = cart.combos.find(
+      (combo) => combo._id.toString() === itemObjectId.toString()
+    );
     if (combo) {
       combo.status = "Served";
       await collection.updateOne(
@@ -302,16 +250,16 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
         { $set: { "combos.$[combo].status": "Served" } },
         { arrayFilters: [{ "combo._id": itemObjectId }] }
       );
-      return res.status(200).json({ message: "Combo status updated successfully" });
+      return res
+        .status(200)
+        .json({ message: "Combo status updated successfully" });
     }
 
-    // If no item or combo found
     return res.status(404).json({ error: "Item or Combo not found" });
   } catch (err) {
-    console.error("Error updating item status:", err);
+    console.error("Error updating item status:", err); 
     return res.status(500).json({ error: "Failed to update item status" });
   }
 });
-
 
 module.exports = cartRouter;
