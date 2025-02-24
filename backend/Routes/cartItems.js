@@ -135,59 +135,41 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    let item = cart.items.find(
-      (item) => item._id.toString() === itemObjectId.toString()
-    );
+    // Update status for item in the cart
+    const item = cart.items.find(item => item._id.toString() === itemObjectId.toString());
     if (item) {
-      item.status = "Served";
+      item.status = "Served"; // Update status locally
       await collection.updateOne(
         { _id: cartObjectId },
         { $set: { "items.$[item].status": "Served" } },
         { arrayFilters: [{ "item._id": itemObjectId }] }
       );
-      return res
-        .status(200)
-        .json({ message: "Item status updated successfully" });
+      return res.status(200).json({ message: "Item status updated successfully" });
     }
 
-    // Handle combos only if they exist
+    // Update status for combo if it exists
     if (cart.combos && cart.combos.length > 0) {
-      const combo = cart.combos.find(
-        (combo) => combo._id.toString() === itemObjectId.toString()
-      );
+      const combo = cart.combos.find(combo => combo._id.toString() === itemObjectId.toString());
       if (combo) {
-        combo.status = "Served";
+        combo.status = "Served"; // Update status locally
         await collection.updateOne(
           { _id: cartObjectId },
           { $set: { "combos.$[combo].status": "Served" } },
           { arrayFilters: [{ "combo._id": itemObjectId }] }
         );
-        return res
-          .status(200)
-          .json({ message: "Combo status updated successfully" });
+        return res.status(200).json({ message: "Combo status updated successfully" });
       }
     }
 
-    
-    const result = await collection.updateOne(
-      { _id: cartObjectId },
-      { $set: { "items.$[item].status": "Served" } },
-      { arrayFilters: [{ "item._id": itemObjectId }] }
-    );
-
-    console.log("Update result:", result);
-
-    if (result.modifiedCount === 0) {
-      console.error("No documents updated.");
-    } else {
-      console.log("Document updated successfully.");
-    }
-
+    // If neither item nor combo is found, return 404
+    console.error(`Item or Combo with ID ${itemId} not found in cart`);
     return res.status(404).json({ error: "Item or Combo not found" });
+
   } catch (err) {
     console.error("Error updating item status:", err);
     return res.status(500).json({ error: "Failed to update item status" });
   }
 });
+
 
 module.exports = cartRouter;
