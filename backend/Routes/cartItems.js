@@ -154,7 +154,7 @@ cartRouter.post("/cartitems", async (req, res) => {
 //   }
 // });
 
-cartRouter.put("/cartitems/:id", async (req, res) => {
+cartRouter.put("/cartitems/id", async (req, res) => {
   const { id } = req.params;
   console.log("Update request for ID:", id);
   
