@@ -60,98 +60,154 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
-cartRouter.put("/cartitems/:id", async (req, res) => {
-  const { id } = req.params;
-  console.log("Update request for ID:", id);
-  const { updatedItems, updatedCombos } = req.body;
+// cartRouter.put("/cartitems/:id", async (req, res) => {
+//   const { id } = req.params;
+//   console.log("Update request for ID:", id);
+//   const { updatedItems, updatedCombos } = req.body;
 
-  if (
-    (updatedItems && !Array.isArray(updatedItems)) ||
-    (updatedCombos && !Array.isArray(updatedCombos))
-  ) {
-    console.error("Invalid input data:", req.body);
-    return res.status(400).json({ error: "Invalid input data" });
-  }
+//   if (
+//     (updatedItems && !Array.isArray(updatedItems)) ||
+//     (updatedCombos && !Array.isArray(updatedCombos))
+//   ) {
+//     console.error("Invalid input data:", req.body);
+//     return res.status(400).json({ error: "Invalid input data" });
+//   }
 
-  if (
-    updatedItems &&
-    updatedItems.some((item) => !item || !item._id || !item.status)
-  ) {
-    console.error("Invalid item data:", updatedItems);
-    return res.status(400).json({ error: "Invalid item data" });
-  }
+//   if (
+//     updatedItems &&
+//     updatedItems.some((item) => !item || !item._id || !item.status)
+//   ) {
+//     console.error("Invalid item data:", updatedItems);  
+//     return res.status(400).json({ error: "Invalid item data" });
+//   }
 
-  if (
-    updatedCombos &&
-    updatedCombos.some((combo) => !combo || !combo._id || !combo.status)
-  ) {
-    console.error("Invalid combo data:", updatedCombos);
-    return res.status(400).json({ error: "Invalid combo data" });
-  }
+//   if (
+//     updatedCombos &&
+//     updatedCombos.some((combo) => !combo || !combo._id || !combo.status)
+//   ) {
+//     console.error("Invalid combo data:", updatedCombos);
+//     return res.status(400).json({ error: "Invalid combo data" });
+//   }
 
+//   try {
+//     const database = await db.getDatabase();
+//     const collection = database.collection("cart");
+
+//     const cartItem = await collection.findOne({ _id: new ObjectId(id) });
+//     if (!cartItem) {
+//       console.error(`Cart item with ID ${id} not found`);
+//       return res.status(404).json({ error: "Cart item not found" });
+//     }
+
+//     const updateOperations = [];
+
+//     if (updatedItems && updatedItems.length > 0) {
+//       updatedItems.forEach((updatedItem) => {
+//         updateOperations.push({
+//           updateOne: {
+//             filter: {
+//               _id: new ObjectId(id),
+//               "items._id": updatedItem._id,
+//               "items.status": { $ne: updatedItem.status },
+//             },
+//             update: { $set: { "items.$.status": updatedItem.status } },
+//           },
+//         });
+//       });
+//     }
+
+//     if (updatedCombos && updatedCombos.length > 0) {
+//       updatedCombos.forEach((updatedCombo) => {
+//         updateOperations.push({
+//           updateOne: {
+//             filter: {
+//               _id: new ObjectId(id),
+//               "combos._id": updatedCombo._id,
+//               "combos.status": { $ne: updatedCombo.status },
+//             },
+//             update: { $set: { "combos.$.status": updatedCombo.status } },
+//           },
+//         });
+//       });
+//     }
+
+//     if (updateOperations.length > 0) {
+//       const result = await collection.bulkWrite(updateOperations);
+
+//       console.log("BulkWrite result:", result);
+
+//       if (result.modifiedCount > 0) {
+//         res.status(200).json({ message: "Cart updated successfully" });
+//       } else {
+//         console.error("No items or combos were updated");
+//         res.status(404).json({ error: "No items or combos were updated" });
+//       }
+//     } else {
+//       console.error("No valid updates provided");
+//       res.status(400).json({ error: "No valid updates provided" });
+//     }
+//   } catch (error) {
+//     console.error("Error updating cart:", error);
+//     res
+//       .status(500)
+//       .json({ error: "Error updating cart", details: error.message });
+//   }
+// });
+
+
+
+
+// Update status of a food item
+cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
+  const { cartId, itemId } = req.params;
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    const cartItem = await collection.findOne({ _id: new ObjectId(id) });
-    if (!cartItem) {
-      console.error(`Cart item with ID ${id} not found`);
-      return res.status(404).json({ error: "Cart item not found" });
+    // Find the cart item
+    const cart = await collection.findOne({ _id: ObjectId(cartId) });
+
+    if (!cart) {
+      return res.status(404).json({ error: "Cart not found" });
     }
 
-    const updateOperations = [];
+    // Find the item within the cart
+    let item = cart.items.find((item) => item._id.toString() === itemId);
 
-    if (updatedItems && updatedItems.length > 0) {
-      updatedItems.forEach((updatedItem) => {
-        updateOperations.push({
-          updateOne: {
-            filter: {
-              _id: new ObjectId(id),
-              "items._id": updatedItem._id,
-              "items.status": { $ne: updatedItem.status },
-            },
-            update: { $set: { "items.$.status": updatedItem.status } },
-          },
-        });
-      });
+    if (item) {
+      // Update the status of the item
+      item.status = "Served"; // You can modify this as per your requirement
+      await collection.updateOne(
+        { _id: ObjectId(cartId) },
+        { $set: { "items.$[item].status": "Served" } },
+        { arrayFilters: [{ "item._id": ObjectId(itemId) }] }
+      );
+      return res.status(200).json({ message: "Item status updated successfully" });
     }
 
-    if (updatedCombos && updatedCombos.length > 0) {
-      updatedCombos.forEach((updatedCombo) => {
-        updateOperations.push({
-          updateOne: {
-            filter: {
-              _id: new ObjectId(id),
-              "combos._id": updatedCombo._id,
-              "combos.status": { $ne: updatedCombo.status },
-            },
-            update: { $set: { "combos.$.status": updatedCombo.status } },
-          },
-        });
-      });
+    // If not found in items, check the combos
+    const combo = cart.combos.find((combo) => combo._id.toString() === itemId);
+
+    if (combo) {
+      // Update the status of the combo
+      combo.status = "Served"; // Modify as needed
+      await collection.updateOne(
+        { _id: ObjectId(cartId) },
+        { $set: { "combos.$[combo].status": "Served" } },
+        { arrayFilters: [{ "combo._id": ObjectId(itemId) }] }
+      );
+      return res.status(200).json({ message: "Combo status updated successfully" });
     }
 
-    if (updateOperations.length > 0) {
-      const result = await collection.bulkWrite(updateOperations);
-
-      console.log("BulkWrite result:", result);
-
-      if (result.modifiedCount > 0) {
-        res.status(200).json({ message: "Cart updated successfully" });
-      } else {
-        console.error("No items or combos were updated");
-        res.status(404).json({ error: "No items or combos were updated" });
-      }
-    } else {
-      console.error("No valid updates provided");
-      res.status(400).json({ error: "No valid updates provided" });
-    }
-  } catch (error) {
-    console.error("Error updating cart:", error);
-    res
-      .status(500)
-      .json({ error: "Error updating cart", details: error.message });
+    // If item or combo is not found
+    return res.status(404).json({ error: "Item or Combo not found" });
+  } catch (err) {
+    console.error("Error updating item status:", err);
+    return res.status(500).json({ error: "Failed to update item status" });
   }
 });
+
+module.exports = cartRouter;
+
 
 module.exports = cartRouter;
