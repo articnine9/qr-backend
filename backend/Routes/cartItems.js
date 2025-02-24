@@ -158,56 +158,106 @@ cartRouter.post("/cartitems", async (req, res) => {
 
 
 // Update status of a food item
+// cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
+//   const { cartId, itemId } = req.params;
+//   try {
+//     const database = await db.getDatabase();
+//     const collection = database.collection("cart");
+
+//     // Find the cart item
+//     const cart = await collection.findOne({ _id: ObjectId(cartId) });
+
+//     if (!cart) {
+//       return res.status(404).json({ error: "Cart not found" });
+//     }
+
+//     // Find the item within the cart
+//     let item = cart.items.find((item) => item._id.toString() === itemId);
+
+//     if (item) {
+//       // Update the status of the item
+//       item.status = "Served"; // You can modify this as per your requirement
+//       await collection.updateOne(
+//         { _id: ObjectId(cartId) },
+//         { $set: { "items.$[item].status": "Served" } },
+//         { arrayFilters: [{ "item._id": ObjectId(itemId) }] }
+//       );
+//       return res.status(200).json({ message: "Item status updated successfully" });
+//     }
+
+//     // If not found in items, check the combos
+//     const combo = cart.combos.find((combo) => combo._id.toString() === itemId);
+
+//     if (combo) {
+//       // Update the status of the combo
+//       combo.status = "Served"; // Modify as needed
+//       await collection.updateOne(
+//         { _id: ObjectId(cartId) },
+//         { $set: { "combos.$[combo].status": "Served" } },
+//         { arrayFilters: [{ "combo._id": ObjectId(itemId) }] }
+//       );
+//       return res.status(200).json({ message: "Combo status updated successfully" });
+//     }
+
+//     // If item or combo is not found
+//     return res.status(404).json({ error: "Item or Combo not found" });
+//   } catch (err) {
+//     console.error("Error updating item status:", err);
+//     return res.status(500).json({ error: "Failed to update item status" });
+//   }
+// });
+
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
+  
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
 
-    // Find the cart item
-    const cart = await collection.findOne({ _id: ObjectId(cartId) });
+    // Correctly create an ObjectId using 'new'
+    const cartObjectId = new ObjectId(cartId);
+    const itemObjectId = new ObjectId(itemId);
+
+    // Find the cart item by its ObjectId
+    const cart = await collection.findOne({ _id: cartObjectId });
 
     if (!cart) {
+      console.error(`Cart with ID ${cartId} not found`);
       return res.status(404).json({ error: "Cart not found" });
     }
 
     // Find the item within the cart
-    let item = cart.items.find((item) => item._id.toString() === itemId);
-
+    let item = cart.items.find((item) => item._id.toString() === itemObjectId.toString());
     if (item) {
-      // Update the status of the item
-      item.status = "Served"; // You can modify this as per your requirement
+      item.status = "Served";
       await collection.updateOne(
-        { _id: ObjectId(cartId) },
+        { _id: cartObjectId },
         { $set: { "items.$[item].status": "Served" } },
-        { arrayFilters: [{ "item._id": ObjectId(itemId) }] }
+        { arrayFilters: [{ "item._id": itemObjectId }] }
       );
       return res.status(200).json({ message: "Item status updated successfully" });
     }
 
-    // If not found in items, check the combos
-    const combo = cart.combos.find((combo) => combo._id.toString() === itemId);
-
+    // Check combos if not found in items
+    const combo = cart.combos.find((combo) => combo._id.toString() === itemObjectId.toString());
     if (combo) {
-      // Update the status of the combo
-      combo.status = "Served"; // Modify as needed
+      combo.status = "Served";
       await collection.updateOne(
-        { _id: ObjectId(cartId) },
+        { _id: cartObjectId },
         { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": ObjectId(itemId) }] }
+        { arrayFilters: [{ "combo._id": itemObjectId }] }
       );
       return res.status(200).json({ message: "Combo status updated successfully" });
     }
 
-    // If item or combo is not found
     return res.status(404).json({ error: "Item or Combo not found" });
+
   } catch (err) {
-    console.error("Error updating item status:", err);
+    console.error("Error updating item status:", err);  // Log the full error here
     return res.status(500).json({ error: "Failed to update item status" });
   }
 });
 
-module.exports = cartRouter;
 
 
 module.exports = cartRouter;
