@@ -168,6 +168,21 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       }
     }
 
+    
+    const result = await collection.updateOne(
+      { _id: cartObjectId },
+      { $set: { "items.$[item].status": "Served" } },
+      { arrayFilters: [{ "item._id": itemObjectId }] }
+    );
+
+    console.log("Update result:", result);
+
+    if (result.modifiedCount === 0) {
+      console.error("No documents updated.");
+    } else {
+      console.log("Document updated successfully.");
+    }
+
     return res.status(404).json({ error: "Item or Combo not found" });
   } catch (err) {
     console.error("Error updating item status:", err);
