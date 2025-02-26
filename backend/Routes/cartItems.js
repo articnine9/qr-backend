@@ -62,7 +62,6 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
-
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
 
@@ -81,7 +80,7 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
     const updateResult = await collection.updateOne(
       { _id: cartObjectId },
       { $set: { "items.$[item].status": "Served" } },
-      { arrayFilters: [{ "item._id": itemId }] } // itemId is a string
+      { arrayFilters: [{ "item._id": itemId }] } 
     );
 
     // If no item matched in "items", try "combos"
