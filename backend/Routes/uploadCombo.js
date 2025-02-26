@@ -58,6 +58,7 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         .json({ message: "Name, items, image, type, and price are required" });
     }
 
+    // Upload file to GridFS
     const uploadStream = bucket.openUploadStream(req.file.originalname, {
       contentType: req.file.mimetype,
     });
@@ -69,21 +70,25 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         const database = await db.getDatabase();
         const metadataCollection = database.collection("combos");
 
-        await metadataCollection.insertOne({
+        // Ensure that no extra `id` field is included here
+        const comboData = {
           comboName,
           comboPrice,
           comboItems,
           comboType,
           comboCategoryName: "combo",
-          comboImage: uploadStream.id.toString(),
+          comboImage: uploadStream.id.toString(), // This is the actual file ID from GridFS
           filename: req.file.originalname,
           contentType: req.file.mimetype,
           uploadDate: new Date(),
-        });
+        };
+
+        // Insert the combo data into the 'combos' collection
+        await metadataCollection.insertOne(comboData);
 
         res.status(200).json({
           message: "Combo added successfully",
-          fileId: uploadStream.id.toString(),
+          fileId: uploadStream.id.toString(), // Returning the file ID from GridFS
         });
       } catch (error) {
         console.error("Error inserting combo metadata:", error);
