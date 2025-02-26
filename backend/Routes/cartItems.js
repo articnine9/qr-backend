@@ -22,7 +22,7 @@ cartRouter.post("/cartitems", async (req, res) => {
   if (
     typeof tableNumber !== "number" ||
     !Array.isArray(items) ||
-    !Array.isArray(combos) 
+    !Array.isArray(combos)
   ) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
@@ -87,23 +87,47 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
     );
 
     // Log the result of the first update
-    if (updateResult.modifiedCount === 0) {
-      console.log("No items updated in 'items' array, trying 'combos'");
+    // if (updateResult.modifiedCount === 0) {
+    //   console.log("No items updated in 'items' array, trying 'combos'");
 
-      // If no items were updated, try updating the combos array
+    //   If no items were updated, try updating the combos array
+    //   const updateComboResult = await collection.updateOne(
+    //     { _id: cartObjectId },
+    //     { $set: { "combos.$[combo].status": "Served" } },
+    //     { arrayFilters: [{ "combo._id": itemObjectId }] }
+    //   );
+
+    //   if (updateComboResult.modifiedCount === 0) {
+    //     console.log("No combos updated. Item/Combo ID might be incorrect.");
+    //   }
+    // } else {
+    //   console.log("Item updated successfully in 'items' array.");
+    // }
+    if (updateResult.modifiedCount === 0) {
+      // If no items were updated, try updating in "combos" array
       const updateComboResult = await collection.updateOne(
         { _id: cartObjectId },
-        { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": itemObjectId }] }
+        {
+          $set: {
+            "combos.$[combo].status": "Served",
+            "combos.$[combo].items.$[item].status": "Served", // Also update the item inside the combo
+          },
+        },
+        {
+          arrayFilters: [
+            { "combo._id": itemObjectId },
+            { "item._id": itemObjectId }, // Ensure we are updating the item inside the combo
+          ],
+        }
       );
 
+      // Log if no combo is updated
       if (updateComboResult.modifiedCount === 0) {
-        console.log("No combos updated. Item/Combo ID might be incorrect.");
+        console.log("No combo updated. Item ID might be incorrect.");
       }
     } else {
       console.log("Item updated successfully in 'items' array.");
     }
-
     // Fetch the updated cart
     const updatedCart = await collection.findOne({ _id: cartObjectId });
 
@@ -114,7 +138,4 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   }
 });
 
-
-
-
-module.exports=cartRouter;
+module.exports = cartRouter;
