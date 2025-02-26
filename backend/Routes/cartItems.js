@@ -62,50 +62,16 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
-// cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
-//   const { cartId, itemId } = req.params;
-
-//   try {
-//     const database = await db.getDatabase();
-//     const collection = database.collection("cart");
-//     const cartObjectId = new ObjectId(cartId);
-
-//     // Find the cart
-//     const cart = await collection.findOne({ _id: cartObjectId });
-//     if (!cart) {
-//       return res.status(404).json({ error: "Cart not found" });
-//     }
-
-//     // Now match the subdocument by string
-//     const updateResult = await collection.updateOne(
-//       { _id: cartObjectId },
-//       { $set: { "items.$[item].status": "Served" } },
-//       { arrayFilters: [{ "item._id": itemId }] } 
-//     );
-
-//     // If no item matched in "items", try "combos"
-//     if (updateResult.modifiedCount === 0) {
-//       await collection.updateOne(
-//         { _id: cartObjectId },
-//         { $set: { "combos.$[combo].status": "Served" } },
-//         { arrayFilters: [{ "combo._id": itemId }] }
-//       );
-//     }
-
-//     return res.status(200).json({ message: "Status updated successfully" });
-//   } catch (err) {
-//     console.error("Error updating item status:", err);
-//     return res.status(500).json({ error: "Failed to update item status" });
-//   }
-// });
-
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
 
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
+
+    // Convert cartId and itemId to ObjectId
     const cartObjectId = new ObjectId(cartId);
+    const itemObjectId = new ObjectId(itemId); // Ensure itemId is an ObjectId
 
     // Find the cart
     const cart = await collection.findOne({ _id: cartObjectId });
@@ -113,20 +79,29 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    // Update items array first
+    // Update the items array with the new status
     const updateResult = await collection.updateOne(
       { _id: cartObjectId },
       { $set: { "items.$[item].status": "Served" } },
-      { arrayFilters: [{ "item._id": itemId }] }
+      { arrayFilters: [{ "item._id": itemObjectId }] }
     );
 
-    // If no item matched in "items", try "combos"
+    // Log the result of the first update
     if (updateResult.modifiedCount === 0) {
-      await collection.updateOne(
+      console.log("No items updated in 'items' array, trying 'combos'");
+
+      // If no items were updated, try updating the combos array
+      const updateComboResult = await collection.updateOne(
         { _id: cartObjectId },
         { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": itemId }] }
+        { arrayFilters: [{ "combo._id": itemObjectId }] }
       );
+
+      if (updateComboResult.modifiedCount === 0) {
+        console.log("No combos updated. Item/Combo ID might be incorrect.");
+      }
+    } else {
+      console.log("Item updated successfully in 'items' array.");
     }
 
     // Fetch the updated cart
@@ -138,6 +113,7 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
     return res.status(500).json({ error: "Failed to update item status" });
   }
 });
+
 
 
 
