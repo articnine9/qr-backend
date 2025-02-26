@@ -62,6 +62,43 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
+// cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
+//   const { cartId, itemId } = req.params;
+
+//   try {
+//     const database = await db.getDatabase();
+//     const collection = database.collection("cart");
+//     const cartObjectId = new ObjectId(cartId);
+
+//     // Find the cart
+//     const cart = await collection.findOne({ _id: cartObjectId });
+//     if (!cart) {
+//       return res.status(404).json({ error: "Cart not found" });
+//     }
+
+//     // Now match the subdocument by string
+//     const updateResult = await collection.updateOne(
+//       { _id: cartObjectId },
+//       { $set: { "items.$[item].status": "Served" } },
+//       { arrayFilters: [{ "item._id": itemId }] } 
+//     );
+
+//     // If no item matched in "items", try "combos"
+//     if (updateResult.modifiedCount === 0) {
+//       await collection.updateOne(
+//         { _id: cartObjectId },
+//         { $set: { "combos.$[combo].status": "Served" } },
+//         { arrayFilters: [{ "combo._id": itemId }] }
+//       );
+//     }
+
+//     return res.status(200).json({ message: "Status updated successfully" });
+//   } catch (err) {
+//     console.error("Error updating item status:", err);
+//     return res.status(500).json({ error: "Failed to update item status" });
+//   }
+// });
+
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
 
@@ -76,11 +113,11 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    // Now match the subdocument by string
+    // Update items array first
     const updateResult = await collection.updateOne(
       { _id: cartObjectId },
       { $set: { "items.$[item].status": "Served" } },
-      { arrayFilters: [{ "item._id": itemId }] } 
+      { arrayFilters: [{ "item._id": itemId }] }
     );
 
     // If no item matched in "items", try "combos"
@@ -92,11 +129,16 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       );
     }
 
-    return res.status(200).json({ message: "Status updated successfully" });
+    // Fetch the updated cart
+    const updatedCart = await collection.findOne({ _id: cartObjectId });
+
+    return res.status(200).json(updatedCart); // Return the updated cart
   } catch (err) {
     console.error("Error updating item status:", err);
     return res.status(500).json({ error: "Failed to update item status" });
   }
 });
+
+
 
 module.exports=cartRouter;

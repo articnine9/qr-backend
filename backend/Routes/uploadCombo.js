@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const mongodb = require("mongodb");
 const db = require("../modals/mongodb");
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -26,7 +26,9 @@ comboRouter.use(async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Failed to connect to GridFS:", error);
-    res.status(500).json({ message: "Failed to connect to GridFS.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to connect to GridFS.", error: error.message });
   }
 });
 
@@ -38,19 +40,22 @@ comboRouter.get("/combo", async (req, res) => {
     res.status(200).json(combos);
   } catch (error) {
     console.error("Error fetching combos:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
 
 comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
   try {
-    const { comboName, comboPrice,comboType } = req.body;
+    const { comboName, comboPrice, comboType } = req.body;
     const comboItems = JSON.parse(req.body.comboItems);
     const comboImage = req.file;
 
-
-    if (!comboName || !comboItems || !comboImage || !comboPrice||!comboType) {
-      return res.status(400).json({ message: "Name, items, image, type, and price are required" });
+    if (!comboName || !comboItems || !comboImage || !comboPrice || !comboType) {
+      return res
+        .status(400)
+        .json({ message: "Name, items, image, type, and price are required" });
     }
 
     const uploadStream = bucket.openUploadStream(req.file.originalname, {
@@ -67,9 +72,9 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         await metadataCollection.insertOne({
           comboName,
           comboPrice,
-          comboItems,    
-          comboType, 
-          comboCategoryName: "combo", 
+          comboItems,
+          comboType,
+          comboCategoryName: "combo",
           comboImage: uploadStream.id.toString(),
           filename: req.file.originalname,
           contentType: req.file.mimetype,
@@ -82,17 +87,26 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         });
       } catch (error) {
         console.error("Error inserting combo metadata:", error);
-        res.status(500).json({ message: "Error storing combo metadata.", error: error.message });
+        res
+          .status(500)
+          .json({
+            message: "Error storing combo metadata.",
+            error: error.message,
+          });
       }
     });
 
     uploadStream.on("error", (error) => {
       console.error("Error uploading file:", error);
-      res.status(500).json({ message: "Error uploading file.", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Error uploading file.", error: error.message });
     });
   } catch (error) {
     console.error("Error handling request:", error);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error.", error: error.message });
   }
 });
 
@@ -104,7 +118,9 @@ comboRouter.get("/image/:fileId", async (req, res) => {
 
     downloadStream.on("error", (error) => {
       console.error("Error retrieving file:", error);
-      res.status(500).json({ message: "Error retrieving file", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Error retrieving file", error: error.message });
     });
 
     const file = await bucket.find({ _id: objectId }).toArray();
@@ -112,11 +128,16 @@ comboRouter.get("/image/:fileId", async (req, res) => {
       return res.status(404).json({ message: "File not found" });
     }
 
-    res.setHeader("Content-Type", file[0].contentType || "application/octet-stream");
+    res.setHeader(
+      "Content-Type",
+      file[0].contentType || "application/octet-stream"
+    );
     downloadStream.pipe(res);
   } catch (error) {
     console.error("Error processing request:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
 
@@ -143,7 +164,9 @@ comboRouter.delete("/:id", async (req, res) => {
     res.status(200).json({ message: "Combo deleted successfully" });
   } catch (error) {
     console.error("Error deleting combo:", error);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error.", error: error.message });
   }
 });
 
