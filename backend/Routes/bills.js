@@ -54,38 +54,50 @@ billsRouter.get("/billitems", async (req, res) => {
 billsRouter.post("/paid", async (req, res) => {
   const { tableNumber, items, combos, paidTime, paidDate } = req.body;
 
+  // Check if tableNumber is a valid integer
   const numericTableNumber = parseInt(tableNumber, 10);
-
-  if (isNaN(numericTableNumber) || (!Array.isArray(items) && !Array.isArray(combos))) {
-    console.error("Invalid input data:", req.body);
-    return res.status(400).json({ error: "Invalid input data" });
+  if (isNaN(numericTableNumber)) {
+    console.error("Invalid table number:", tableNumber);
+    return res.status(400).json({ error: "Invalid table number" });
   }
 
-  // Process items from the 'items' array
-  const updatedItems = items.map((item) => ({
-    ...item,
-    price: parseFloat(item.price), // Convert price from string to float
-    count: parseInt(item.count["$numberInt"], 10) || 1 // Convert count from string to integer
-  }));
+  // Validate that items and combos are arrays
+  if (!Array.isArray(items) || !Array.isArray(combos)) {
+    console.error("Invalid input data:", req.body);
+    return res.status(400).json({ error: "Invalid items or combos data" });
+  }
 
-  // Process items from the 'combos' array
-  const comboItems = combos.flatMap((combo) => 
-    combo.items.map((comboItem) => ({
+  // Process regular items
+  const updatedItems = items.map((item) => {
+    console.log("Processing item:", item);
+    return {
+      ...item,
+      price: parseFloat(item.price), // Convert price from string to float
+      count: parseInt(item.count["$numberInt"], 10) || 1 // Convert count from string to integer
+    };
+  });
+
+  // Process combo items
+  const comboItems = combos.flatMap((combo) => {
+    console.log("Processing combo:", combo);
+    return combo.items.map((comboItem) => ({
       ...comboItem,
-      price: parseFloat(combo.price), // Combo price is applied to each item in the combo
-      count: parseInt(combo.count["$numberInt"], 10) || 1 // Convert combo count
-    }))
-  );
+      price: parseFloat(combo.price), // Apply the combo price
+      count: parseInt(combo.count["$numberInt"], 10) || 1 // Convert combo count to integer
+    }));
+  });
 
   // Combine regular items and combo items
   const allItems = [...updatedItems, ...comboItems];
+  console.log("All items to insert into bill:", allItems);
 
   try {
     const database = await db.getDatabase();
     const cartCollection = database.collection("cart");
     const billsCollection = database.collection("billcollection");
-    
-    await billsCollection.insertOne({
+
+    // Insert the bill into the database
+    const result = await billsCollection.insertOne({
       tableNumber: numericTableNumber,
       items: allItems,
       paidTime,
@@ -93,14 +105,19 @@ billsRouter.post("/paid", async (req, res) => {
       billStatus: "paid",
     });
 
+    console.log("Bill inserted successfully:", result);
+
+    // Clear the cart for the given table number
     await cartCollection.deleteMany({ tableNumber: numericTableNumber });
 
+    // Respond with a success message
     res.status(200).json({ message: "Items marked as paid successfully" });
   } catch (error) {
     console.error("Error marking as paid:", error);
     res.status(500).json({ error: "Error marking as paid" });
   }
 });
+
 
 
 module.exports = billsRouter;
