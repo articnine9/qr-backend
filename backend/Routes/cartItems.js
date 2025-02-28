@@ -22,7 +22,7 @@ cartRouter.post("/cartitems", async (req, res) => {
   if (
     typeof tableNumber !== "number" ||
     !Array.isArray(items) ||
-    !Array.isArray(combos) 
+    !Array.isArray(combos)
   ) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
@@ -94,7 +94,7 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       const updateComboResult = await collection.updateOne(
         { _id: cartObjectId },
         { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": itemObjectId }] }
+        { arrayFilters: [{ "combo._id": new ObjectId(itemObjectId) }] } // Ensure that itemObjectId is treated as ObjectId
       );
 
       if (updateComboResult.modifiedCount === 0) {
@@ -114,7 +114,4 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   }
 });
 
-
-
-
-module.exports=cartRouter;
+module.exports = cartRouter;

@@ -50,6 +50,4 @@ billsRouter.post("/paid", async (req, res) => {
   }
 });
 
-
-
 module.exports = billsRouter;
