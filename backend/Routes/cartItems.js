@@ -94,8 +94,9 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       const updateComboResult = await collection.updateOne(
         { _id: cartObjectId },
         { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": new ObjectId(itemObjectId) }] } // Ensure that itemObjectId is treated as ObjectId
+        { arrayFilters: [{ "combo._id": itemObjectId.toString() }] } // Convert ObjectId to string for combo
       );
+      
 
       if (updateComboResult.modifiedCount === 0) {
         console.log("No combos updated. Item/Combo ID might be incorrect.");
