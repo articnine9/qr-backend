@@ -70,7 +70,6 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
         const database = await db.getDatabase();
         const metadataCollection = database.collection("combos");
 
-        // Ensure that no extra `id` field is included here
         const comboData = {
           comboName,
           comboPrice,
@@ -81,14 +80,14 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
           filename: req.file.originalname,
           contentType: req.file.mimetype,
           uploadDate: new Date(),
+          availability: req.body.availability || "available", // Set availability to 'available' if not provided
         };
 
-        // Insert the combo data into the 'combos' collection
         await metadataCollection.insertOne(comboData);
 
         res.status(200).json({
           message: "Combo added successfully",
-          fileId: uploadStream.id.toString(), // Returning the file ID from GridFS
+          fileId: uploadStream.id.toString(),
         });
       } catch (error) {
         console.error("Error inserting combo metadata:", error);
@@ -112,6 +111,29 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error.", error: error.message });
+  }
+});
+
+comboRouter.patch("/stocks/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { availability } = req.body;
+    let database = await db.getDatabase();
+    let collection = database.collection("combos");
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { availability } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Updated successfully" });
+    } else {
+      res.status(404).json({ message: "Combo not found or no changes" });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -176,3 +198,4 @@ comboRouter.delete("/:id", async (req, res) => {
 });
 
 module.exports = comboRouter;
+ 
