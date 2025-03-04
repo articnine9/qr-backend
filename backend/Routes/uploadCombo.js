@@ -80,6 +80,7 @@ comboRouter.post("/add", upload.single("comboImage"), async (req, res) => {
           filename: req.file.originalname,
           contentType: req.file.mimetype,
           uploadDate: new Date(),
+          availability: req.body.availability || "available",
         };
 
         await metadataCollection.insertOne(comboData);
