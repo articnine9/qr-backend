@@ -116,4 +116,4 @@ menu.post("/delete", async (req, res) => {
   }
 });
 
-module.exports = menu; 
+module.exports = menu;
