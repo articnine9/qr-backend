@@ -4,6 +4,7 @@ const { ObjectId } = require("mongodb");
 
 const cartRouter = express.Router();
 
+// Fetch all cart items
 cartRouter.get("/items", async (req, res) => {
   try {
     const database = await db.getDatabase();
@@ -16,13 +17,15 @@ cartRouter.get("/items", async (req, res) => {
   }
 });
 
+// Add items and combos to the cart
 cartRouter.post("/cartitems", async (req, res) => {
   const { tableNumber, items, combos } = req.body;
 
+  // Validate input data
   if (
     typeof tableNumber !== "number" ||
     !Array.isArray(items) ||
-    !Array.isArray(combos) 
+    !Array.isArray(combos)
   ) {
     console.error("Invalid input data:", req.body);
     return res.status(400).json({ error: "Invalid input data" });
@@ -32,23 +35,28 @@ cartRouter.post("/cartitems", async (req, res) => {
     return res.status(400).json({ error: "No items or combos provided" });
   }
 
+  // Add status to items and combos
   const itemsWithStatus = items.map((item) => ({
     ...item,
-    _id: new ObjectId(),
-    status: item.status || "Not Served",
+    _id: new ObjectId(), // Generate a new ObjectId for each item
+    status: item.status || "Not Served", // Default status
   }));
-  const comboWithStatus = combos.map((combo) => ({
+
+  const combosWithStatus = combos.map((combo) => ({
     ...combo,
-    id: new ObjectId(),
-    status: combo.status || "Not Served",
+    _id: new ObjectId(), // Generate a new ObjectId for each combo
+    status: combo.status || "Not Served", // Default status
   }));
+
   try {
     const database = await db.getDatabase();
     const collection = database.collection("cart");
+
+    // Insert the cart into the database
     const result = await collection.insertOne({
       tableNumber,
       items: itemsWithStatus,
-      combos: comboWithStatus,
+      combos: combosWithStatus,
     });
 
     if (result.acknowledged) {
@@ -62,6 +70,7 @@ cartRouter.post("/cartitems", async (req, res) => {
   }
 });
 
+// Update item or combo status
 cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   const { cartId, itemId } = req.params;
 
@@ -71,7 +80,7 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
 
     // Convert cartId and itemId to ObjectId
     const cartObjectId = new ObjectId(cartId);
-    const itemObjectId = new ObjectId(itemId); // Ensure itemId is an ObjectId
+    const itemObjectId = new ObjectId(itemId);
 
     // Find the cart
     const cart = await collection.findOne({ _id: cartObjectId });
@@ -79,28 +88,26 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
       return res.status(404).json({ error: "Cart not found" });
     }
 
-    // Update the items array with the new status
+    // Update the status of the item or combo
     const updateResult = await collection.updateOne(
       { _id: cartObjectId },
-      { $set: { "items.$[item].status": "Served" } },
-      { arrayFilters: [{ "item._id": itemObjectId }] }
+      {
+        $set: {
+          "items.$[item].status": "Served",
+          "combos.$[combo].status": "Served",
+        },
+      },
+      {
+        arrayFilters: [
+          { "item._id": itemObjectId }, // Filter for items
+          { "combo._id": itemObjectId }, // Filter for combos
+        ],
+      }
     );
 
-    // Log the result of the first update
     if (updateResult.modifiedCount === 0) {
-      console.log("No items updated in 'items' array, trying 'combos'");
-
-      // If no items were updated, try updating the combos array
-      const updateComboResult = await collection.updateOne(
-        { _id: cartObjectId },
-        { $set: { "combos.$[combo].status": "Served" } },
-        { arrayFilters: [{ "combo._id": itemObjectId }] }
-      );
-      if (updateComboResult.modifiedCount === 0) {
-        console.log("No combos updated. Item/Combo ID might be incorrect.");
-      }
-    } else {
-      console.log("Item updated successfully in 'items' array.");
+      console.log("No items or combos updated. Item/Combo ID might be incorrect.");
+      return res.status(404).json({ error: "Item or combo not found" });
     }
 
     // Fetch the updated cart
@@ -113,7 +120,4 @@ cartRouter.put("/cartitems/:cartId/item/:itemId", async (req, res) => {
   }
 });
 
-
-
-
-module.exports=cartRouter;
+module.exports = cartRouter;
